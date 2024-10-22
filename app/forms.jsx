@@ -1,16 +1,19 @@
-"use client"
-import React, { useState } from 'react';
-import jsPDF from 'jspdf';
+"use client";
+import React, { useState } from "react";
+import jsPDF from "jspdf";
+
 function ExperimentForm() {
-  const [name, setName] = useState('');
-  const [experiment, setExperiment] = useState('');
+  const [name, setName] = useState("");
+  const [experiment, setExperiment] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Fetch a specific file from GitHub
   const fetchGitHubFile = async (path) => {
     try {
-      const response = await fetch(`https://raw.githubusercontent.com/Xrg360/KTUS7_Compiler_design_lab/master/print/${path}`);
-      if (!response.ok) throw new Error('File not found');
+      const response = await fetch(
+        `https://raw.githubusercontent.com/Xrg360/KTUS7_Compiler_design_lab/master/print/${path}`
+      );
+      if (!response.ok) throw new Error("File not found");
       return response.text();
     } catch (error) {
       console.warn(`File ${path} not found, skipping...`);
@@ -18,91 +21,81 @@ function ExperimentForm() {
     }
   };
 
- // Generate the PDF
-const generatePDF = async () => {
-  setLoading(true);
-  try {
-    const doc = new jsPDF();
-    
-    const pageWidth = doc.internal.pageSize.getWidth(); // Get page width
-    const asterisksLine = '*'.repeat(pageWidth/1.8); // Adjust this factor to fill the width
+  // Generate the PDF
+  const generatePDF = async () => {
+    setLoading(true);
+    try {
+      const doc = new jsPDF();
 
-    // Add custom header
-    doc.setFontSize(12);
-    doc.text(asterisksLine, 10, 10); // Full width asterisks line
-    doc.text(`Name: ${name}`, 10, 20);
-    doc.text('Class: S7 CSE B', 10, 30);
-    doc.text(`Experiment: ${experiment.toUpperCase()}`, 10, 40);
-    doc.text(asterisksLine, 10, 50); // Full width asterisks line
+      const pageWidth = doc.internal.pageSize.getWidth() * 0.8; // Scale to 80%
+      const pageHeight = doc.internal.pageSize.getHeight() * 0.8;
+      const asterisksLine = "*".repeat(pageWidth / 1.8);
 
-    let yOffset = 60;  // Start content after the header
+      // Add custom header
+      doc.setFontSize(9.6); // Scaled font size (80% of original 12)
+      doc.text(asterisksLine, 8, 8); // Adjust position for 80% scaling
+      doc.text(`Name: ${name}`, 8, 16);
+      doc.text("Class: S7 CSE B", 8, 24);
+      doc.text(`Experiment: ${experiment.toUpperCase()}`, 8, 32);
+      doc.text(asterisksLine, 8, 40);
 
-    // Files to attempt fetching
-    const possibleFiles = ['code.c', 'code.l', 'code.y', ,'input.txt','output.txt'];
+      let yOffset = 48; // Start content after the header
 
-    for (const file of possibleFiles) {
-      const content = await fetchGitHubFile(`${experiment}/${file}`);
-      if (content) {
-        // Add a heading before each file's content
-        doc.setFontSize(14);
-        doc.text(`${file}:`, 10, yOffset);
-        yOffset += 10;
+      // Files to attempt fetching
+      const possibleFiles = ["code.c", "code.l", "code.y", "input.txt", "output.txt"];
 
-        // Switch to monospaced font (Courier)
-        doc.setFont('Courier', 'normal');
-        doc.setFontSize(10);  // Slightly smaller for code formatting
+      for (const file of possibleFiles) {
+        const content = await fetchGitHubFile(`${experiment}/${file}`);
+        if (content) {
+          // Add a heading before each file's content
+          doc.setFontSize(11.2); // Scaled font size (80% of original 14)
+          doc.text(`${file}:`, 8, yOffset);
+          yOffset += 8;
 
-        // Add the file content below its heading
-        const lines = doc.splitTextToSize(content, 180); // Wrap text within 180 width
-        
-        // Adjusted line spacing
-        for (let i = 0; i < lines.length; i++) {
-          if (yOffset > 280) { // If we're getting too close to the bottom of the page
-            doc.addPage();
-            yOffset = 20; // Reset yOffset for new page
+          // Switch to monospaced font (Courier)
+          doc.setFont("Courier", "normal");
+          doc.setFontSize(8); // Scaled font size (80% of original 10)
+
+          // Add the file content below its heading
+          const lines = doc.splitTextToSize(content, pageWidth);
+
+          for (let i = 0; i < lines.length; i++) {
+            if (yOffset > pageHeight - 20) {
+              doc.addPage();
+              yOffset = 16;
+            }
+            doc.text(lines[i], 8, yOffset);
+            yOffset += 4.8; // Reduced line spacing for scaled font size
           }
-          doc.text(lines[i], 10, yOffset);
-          yOffset += 6; // Reduced line spacing for code
+
+          // Switch back to default font for headings (optional)
+          doc.setFont("Helvetica", "normal");
         }
-
-        // Switch back to default font for headings (optional)
-        doc.setFont('Helvetica', 'normal');
       }
+
+      // Add the image at the end of the PDF
+      const img = new Image();
+      img.src = "/continuouseval.png"; // You can use a Base64 string or a URL here
+
+      img.onload = () => {
+        const imgWidth = img.width * 0.8; // Scale image to 80%
+        const imgHeight = img.height * 0.8;
+        const maxWidth = pageWidth - 16;
+        const maxHeight = pageHeight - yOffset - 16;
+        const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+        const imgDisplayWidth = imgWidth * ratio;
+        const imgDisplayHeight = imgHeight * ratio;
+        const xOffset = (pageWidth - imgDisplayWidth) / 2;
+
+        doc.addImage(img, "PNG", xOffset, yOffset, imgDisplayWidth, imgDisplayHeight);
+        doc.save(`${experiment}_report.pdf`);
+      };
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      setLoading(false);
     }
-
-    // Add the image at the end of the PDF
-    const img = new Image();
-    img.src = '/continuouseval.png'; // You can use a Base64 string or a URL here
-
-    img.onload = () => {
-      const imgWidth = img.width;
-      const imgHeight = img.height;
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-
-      // Calculate the max dimensions that fit within the page without stretching
-      const maxWidth = pageWidth - 20; // 20 for padding
-      const maxHeight = pageHeight - yOffset - 20; // Adjust for the current yOffset and some padding
-
-      // Calculate aspect ratio
-      const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
-      const imgDisplayWidth = imgWidth * ratio;
-      const imgDisplayHeight = imgHeight * ratio;
-
-      // Add image to the PDF at the calculated position (centered)
-      const xOffset = (pageWidth - imgDisplayWidth) / 2; // Center the image horizontally
-      doc.addImage(img, 'PNG', xOffset, yOffset, imgDisplayWidth, imgDisplayHeight);
-
-      // Download the generated PDF
-      doc.save(`${experiment}_report.pdf`);
-    };
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -110,34 +103,46 @@ const generatePDF = async () => {
   };
 
   return (
-    <div className='w-full h-screen flex justify-center items-center'>
-        <form onSubmit={handleSubmit} className="max-w-md mx-auto p-6 border border-gray-300 rounded-lg bg-white shadow-md">
-      <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Enter your name"
-        required
-        className="w-full p-2 mb-4 border border-gray-300 rounded text-black"
-      />
-      <select value={experiment} onChange={(e) => setExperiment(e.target.value)} required className="w-full text-black p-2 mb-4 border border-gray-300 rounded">
-        <option value="">Select Experiment</option>
-        <option value="exp1">Experiment 1</option>
-        <option value="exp2a">Experiment 2a</option>
-        <option value="exp2b">Experiment 2b</option>
-        <option value="exp2c">Experiment 2c</option>
-        <option value="exp3a">Experiment 3a</option>
-        <option value="exp3b">Experiment 3b</option>
-        <option value="exp3c">Experiment 3c</option>
-        <option value="exp4">Experiment 4</option>
-        <option value="exp5">Experiment 5</option>
-        <option value="exp6">Experiment 6</option>
-        <option value="exp7">Experiment 7</option>
-      </select>
-      <button type="submit" disabled={loading} className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400">
-        {loading ? 'Generating PDF...' : 'Generate PDF'}
-      </button>
-    </form>
+    <div className="w-full h-screen flex justify-center items-center">
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-md mx-auto p-6 border border-gray-300 rounded-lg bg-white shadow-md"
+      >
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter your name"
+          required
+          className="w-full p-2 mb-4 border border-gray-300 rounded text-black"
+        />
+        <select
+          value={experiment}
+          onChange={(e) => setExperiment(e.target.value)}
+          required
+          className="w-full text-black p-2 mb-4 border border-gray-300 rounded"
+        >
+          <option value="">Select Experiment</option>
+          <option value="exp1">Experiment 1</option>
+          <option value="exp2a">Experiment 2a</option>
+          <option value="exp2b">Experiment 2b</option>
+          <option value="exp2c">Experiment 2c</option>
+          <option value="exp3a">Experiment 3a</option>
+          <option value="exp3b">Experiment 3b</option>
+          <option value="exp3c">Experiment 3c</option>
+          <option value="exp4">Experiment 4</option>
+          <option value="exp5">Experiment 5</option>
+          <option value="exp6">Experiment 6</option>
+          <option value="exp8">Experiment 8</option>
+        </select>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+        >
+          {loading ? "Generating PDF..." : "Generate PDF"}
+        </button>
+      </form>
     </div>
   );
 }
