@@ -133,6 +133,7 @@ function ExperimentForm() {
           <option value="exp4">Experiment 4</option>
           <option value="exp5">Experiment 5</option>
           <option value="exp6">Experiment 6</option>
+          <option value="exp7">Experiment 7</option>
           <option value="exp8">Experiment 8</option>
         </select>
         <button
