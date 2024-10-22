@@ -135,6 +135,11 @@ function ExperimentForm() {
           <option value="exp6">Experiment 6</option>
           <option value="exp7">Experiment 7</option>
           <option value="exp8">Experiment 8</option>
+          <option value="exp9">Experiment 9</option>
+          <option value="exp10">Experiment 10</option>
+          <option value="exp11">Experiment 11</option>
+          
+          
         </select>
         <button
           type="submit"
