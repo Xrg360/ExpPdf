@@ -103,7 +103,7 @@ function ExperimentForm() {
   };
 
   return (
-    <div className="w-full h-screen flex justify-center items-center">
+    <div className="w-full h-screen flex justify-center items-center ">
       <form
         onSubmit={handleSubmit}
         className="max-w-md mx-auto p-6 border border-gray-300 rounded-lg bg-white shadow-md"
@@ -114,13 +114,13 @@ function ExperimentForm() {
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter your name"
           required
-          className="w-full p-2 mb-4 border border-gray-300 rounded text-black"
+          className="w-full p-2 mb-4 border border-gray-300 rounded "
         />
         <select
           value={experiment}
           onChange={(e) => setExperiment(e.target.value)}
           required
-          className="w-full text-black p-2 mb-4 border border-gray-300 rounded"
+          className="w-full  p-2 mb-4 border border-gray-300 rounded"
         >
           <option value="">Select Experiment</option>
           <option value="exp1">Experiment 1</option>
