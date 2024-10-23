@@ -1,11 +1,12 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
-import { Folder, File, ChevronLeft, Download, Loader2, Check } from 'lucide-react';
+import { Folder, File, ChevronLeft, Download, Loader2, Check, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 export default function GitHubExplorer() {
   const [contents, setContents] = useState([]);
@@ -14,9 +15,10 @@ export default function GitHubExplorer() {
   const [error, setError] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [name, setName] = useState('');
-  const [className, setClassName] = useState('S7 CSE B'); // New state for class
-  const [rollNumber, setRollNumber] = useState(''); // New state for roll number
+  const [className, setClassName] = useState('S7 CSE B');
+  const [rollNumber, setRollNumber] = useState('');
   const [experiment, setExperiment] = useState('');
+  const [viewingFile, setViewingFile] = useState(null);
 
   useEffect(() => {
     fetchRepoContents(currentPath);
@@ -52,6 +54,7 @@ export default function GitHubExplorer() {
       return '';
     }
   };
+
 
   const generatePDF = async () => {
     setLoading(true);
@@ -136,6 +139,11 @@ export default function GitHubExplorer() {
     setCurrentPath(newPath);
   };
 
+  const handleViewCode = async (item) => {
+    const content = await fetchFileContent(item.path);
+    setViewingFile({ name: item.name, content });
+  };
+
   return (
     <div className="container mx-auto p-4">
       <Card>
@@ -184,7 +192,8 @@ export default function GitHubExplorer() {
               Current Path: {currentPath || 'Root'}
             </span>
           </div>
-          <span className='font-mono text-xs'>select the filename you want to add and then click generatePDF</span>
+
+          <span className='font-mono text-xs'>Click on a file to add into PDF.</span>
           {loading ? (
             <div className="flex items-center justify-center p-4">
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -196,21 +205,50 @@ export default function GitHubExplorer() {
               {contents.map((item) => (
                 <div
                   key={item.path}
-                  onClick={() => handleFileClick(item)}
-                  className={`flex cursor-pointer items-center space-x-2 rounded-md p-2 hover:bg-accent ${
+                  className={`flex items-center justify-between space-x-2 rounded-md p-2 hover:bg-accent ${
                     selectedFiles.find((file) => file.path === item.path)
                       ? 'bg-accent'
                       : ''
                   }`}
                 >
-                  {item.type === 'dir' ? (
-                    <Folder className="h-4 w-4 text-blue-500" />
-                  ) : (
-                    <File className="h-4 w-4 text-gray-500" />
-                  )}
-                  <span>{item.name}</span>
-                  {selectedFiles.find((file) => file.path === item.path) && (
-                    <Check className="h-4 w-4 text-green-500" />
+                  <div
+                    onClick={() => handleFileClick(item)}
+                    className="flex items-center space-x-2 cursor-pointer flex-grow"
+                  >
+                    {item.type === 'dir' ? (
+                      <Folder className="h-4 w-4 text-blue-500" />
+                    ) : (
+                      <File className="h-4 w-4 text-gray-500" />
+                    )}
+                    <span>{item.name}</span>
+                    {selectedFiles.find((file) => file.path === item.path) && (
+                      <Check className="h-4 w-4 text-green-500" />
+                    )}
+                  </div>
+                  {item.type === 'file' && (
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewCode(item);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Code
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>{viewingFile?.name}</DialogTitle>
+                        </DialogHeader>
+                        <pre className="bg-muted p-4 rounded-md overflow-x-auto">
+                          <code>{viewingFile?.content}</code>
+                        </pre>
+                      </DialogContent>
+                    </Dialog>
                   )}
                 </div>
               ))}
