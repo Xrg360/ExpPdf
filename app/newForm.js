@@ -140,7 +140,7 @@ export default function GitHubExplorer() {
     <div className="container mx-auto p-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">GitHub Explorer</CardTitle>
+          <CardTitle className="text-2xl font-bold">Compiler Lab</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4 space-y-2">
