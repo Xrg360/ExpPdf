@@ -120,13 +120,11 @@ export default function SemesterLabExplorer() {
             !isLoading && lab !== null ? "opacity-100" : "opacity-0"
           }`}
         >
-          <Card>
-            <CardContent className="p-6">
+         
+           
               {!isLoading && lab !== null && repoNames[semester]?.[lab] && (
                 <GitHubExplorer repo={repoNames[semester][lab]} heading={lab} />
               )}
-            </CardContent>
-          </Card>
         </div>
       </div>
 
