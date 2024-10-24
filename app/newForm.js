@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
-export default function GitHubExplorer() {
+export default function GitHubExplorer({repo,heading}) {
+  console.log(repo);
   const [contents, setContents] = useState([]);
   const [currentPath, setCurrentPath] = useState('');
   const [loading, setLoading] = useState(true);
@@ -28,7 +29,7 @@ export default function GitHubExplorer() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`https://api.github.com/repos/Xrg360/KTUS7_Compiler_design_lab/contents/${path}`);
+      const response = await fetch(`https://api.github.com/repos/Xrg360/${repo}/contents/${path}`);
       if (!response.ok) {
         throw new Error('Failed to fetch contents');
       }
@@ -43,7 +44,7 @@ export default function GitHubExplorer() {
 
   const fetchFileContent = async (filePath) => {
     try {
-      const response = await fetch(`https://raw.githubusercontent.com/Xrg360/KTUS7_Compiler_design_lab/master/${filePath}`);
+      const response = await fetch(`https://raw.githubusercontent.com/Xrg360/${repo}/master/${filePath}`);
       if (!response.ok) {
         throw new Error('Failed to fetch file content');
       }
@@ -145,10 +146,10 @@ export default function GitHubExplorer() {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Compiler Lab</CardTitle>
+          <CardTitle className="text-2xl font-bold">{heading}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4 space-y-2">
@@ -193,7 +194,7 @@ export default function GitHubExplorer() {
             </span>
           </div>
 
-          <span className='font-mono text-xs'>Click on a file to add into PDF.</span>
+          <span className='font-mono text-xs'>Click on a file to add into PDF.</span>z
           {loading ? (
             <div className="flex items-center justify-center p-4">
               <Loader2 className="h-6 w-6 animate-spin" />
