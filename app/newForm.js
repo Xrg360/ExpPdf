@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 import { Folder, File, ChevronLeft, Download, Loader2, Check, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
-export default function GitHubExplorer({repo,heading}) {
-  console.log(repo);
+export default function GitHubExplorer({ repo, heading }) {
   const [contents, setContents] = useState([]);
   const [currentPath, setCurrentPath] = useState('');
   const [loading, setLoading] = useState(true);
@@ -26,7 +25,7 @@ export default function GitHubExplorer({repo,heading}) {
   }, [currentPath]);
 
   const fetchRepoContents = async (path) => {
-    setLoading(true);
+    setLoading(true); 
     setError(null);
     try {
       const response = await fetch(`https://api.github.com/repos/Xrg360/${repo}/contents/${path}`);
@@ -56,43 +55,45 @@ export default function GitHubExplorer({repo,heading}) {
     }
   };
 
-
-  const generatePDF = async () => {
+  const generatePDF = useCallback(async () => {
     setLoading(true);
     try {
       const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth() * 0.8;
-      const pageHeight = doc.internal.pageSize.getHeight() * 0.8;
-      const asterisksLine = '*'.repeat(pageWidth / 1.8);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pageWidth - 2 * margin;
+      const contentHeight = pageHeight - 2 * margin;
+      const asterisksLine = '*'.repeat(Math.floor(contentWidth / 1.8));
 
       doc.setFontSize(9.6);
-      doc.text(asterisksLine, 8, 8);
-      doc.text(`Name: ${name}`, 8, 16);
-      doc.text(`Class: ${className}`, 8, 24); // Updated to include class
-      doc.text(`Roll Number: ${rollNumber}`, 8, 32); // Added roll number
-      doc.text(`Experiment: ${experiment.toUpperCase()}`, 8, 40);
-      doc.text(asterisksLine, 8, 48);
+      doc.text(asterisksLine, margin, margin);
+      doc.text(`Name: ${name}`, margin, margin + 8);
+      doc.text(`Class: ${className}`, margin, margin + 16);
+      doc.text(`Roll Number: ${rollNumber}`, margin, margin + 24);
+      doc.text(`Experiment: ${experiment.toUpperCase()}`, margin, margin + 32);
+      doc.text(asterisksLine, margin, margin + 40);
 
-      let yOffset = 56;
+      let yOffset = margin + 48;
 
       for (const file of selectedFiles) {
         const fileContent = await fetchFileContent(file.path);
         if (fileContent) {
           doc.setFontSize(11.2);
-          doc.text(`${file.name}:`, 8, yOffset);
+          doc.text(`${file.name}:`, margin, yOffset);
           yOffset += 8;
 
           doc.setFont('Courier', 'normal');
           doc.setFontSize(8);
 
-          const lines = doc.splitTextToSize(fileContent, pageWidth);
+          const lines = doc.splitTextToSize(fileContent, contentWidth);
 
           for (let i = 0; i < lines.length; i++) {
-            if (yOffset > pageHeight - 20) {
+            if (yOffset > pageHeight - margin - 20) {
               doc.addPage();
-              yOffset = 16;
+              yOffset = margin;
             }
-            doc.text(lines[i], 8, yOffset);
+            doc.text(lines[i], margin, yOffset);
             yOffset += 4.8;
           }
           yOffset += 10;
@@ -103,24 +104,43 @@ export default function GitHubExplorer({repo,heading}) {
       img.src = '/continuouseval.png';
 
       img.onload = () => {
-        const imgWidth = img.width * 0.8;
-        const imgHeight = img.height * 0.8;
-        const maxWidth = pageWidth - 16;
-        const maxHeight = pageHeight - yOffset - 16;
-        const ratio = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
-        const imgDisplayWidth = imgWidth * ratio;
-        const imgDisplayHeight = imgHeight * ratio;
-        const xOffset = (pageWidth - imgDisplayWidth) / 2;
+        const imgAspectRatio = img.width / img.height;
+        const maxImgWidth = contentWidth*0.8;
+        const maxImgHeight = contentHeight * 0.3; // Limit image height to 30% of content height
+        let imgWidth, imgHeight;
 
-        doc.addImage(img, 'PNG', xOffset, yOffset, imgDisplayWidth, imgDisplayHeight);
+        if (maxImgWidth / imgAspectRatio <= maxImgHeight) {
+          imgWidth = maxImgWidth;
+          imgHeight = maxImgWidth / imgAspectRatio;
+        } else {
+          imgHeight = maxImgHeight;
+          imgWidth = maxImgHeight * imgAspectRatio;
+        }
+
+        const xOffset = margin ;
+        const remainingSpace = pageHeight - yOffset - margin;
+
+        if (remainingSpace < imgHeight) {
+          doc.addPage();
+          yOffset = margin;
+        }
+
+        doc.addImage(img, 'PNG', xOffset, yOffset, imgWidth, imgHeight);
         doc.save(`${experiment}_report.pdf`);
+
+        // Clear cache after downloading
+        setSelectedFiles([]);
+        setName('');
+        setClassName('S7 CSE B');
+        setRollNumber('');
+        setExperiment('');
       };
     } catch (error) {
       console.error('Error generating PDF:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedFiles, name, className, rollNumber, experiment]);
 
   const handleFileClick = (item) => {
     if (item.type === 'file') {
@@ -194,7 +214,7 @@ export default function GitHubExplorer({repo,heading}) {
             </span>
           </div>
 
-          <span className='font-mono text-xs'>Click on a file to add into PDF.</span>z
+          <span className='font-mono text-xs'>Click on a file to add into PDF.</span>
           {loading ? (
             <div className="flex items-center justify-center p-4">
               <Loader2 className="h-6 w-6 animate-spin" />
