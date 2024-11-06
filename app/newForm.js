@@ -25,7 +25,7 @@ export default function GitHubExplorer({ repo, heading }) {
   }, [currentPath]);
 
   const fetchRepoContents = async (path) => {
-    setLoading(true); 
+    setLoading(true);
     setError(null);
     try {
       const response = await fetch(`https://api.github.com/repos/Xrg360/${repo}/contents/${path}`);
@@ -130,10 +130,6 @@ export default function GitHubExplorer({ repo, heading }) {
 
         // Clear cache after downloading
         setSelectedFiles([]);
-        setName('');
-        setClassName('S7 CSE B');
-        setRollNumber('');
-        setExperiment('');
       };
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -152,6 +148,7 @@ export default function GitHubExplorer({ repo, heading }) {
       });
     } else if (item.type === 'dir') {
       setCurrentPath(item.path);
+      setExperiment(item.name); // Set the experiment name to the selected folder name
     }
   };
 
@@ -196,7 +193,7 @@ export default function GitHubExplorer({ repo, heading }) {
             />
             <Input
               type="text"
-              placeholder="Experiment Name"
+              placeholder={currentPath ? `Experiment: ${currentPath.split('/').pop()}` : "Experiment Name"}
               value={experiment}
               onChange={(e) => setExperiment(e.target.value)}
               className="max-w-xs"
