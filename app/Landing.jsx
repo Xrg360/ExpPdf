@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import GitHubExplorer from "./newForm"
+import GitHubExplorer from "./newGeminiForm"
 
 const semestersData = {
   "Semester 1": ["Lab 1: Programming in Python"],

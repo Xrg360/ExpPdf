@@ -80,6 +80,7 @@ export default function GitHubExplorer({ repo, heading }) {
         const fileContent = await fetchFileContent(file.path);
         if (fileContent) {
           doc.setFontSize(11.2);
+          
           doc.text(`${file.name}:`, margin, yOffset);
           yOffset += 8;
 
