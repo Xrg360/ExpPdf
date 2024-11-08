@@ -75,8 +75,8 @@ export default function SemesterLabExplorer() {
       <div className={`transition-opacity duration-300 ${isPageLoading ? "opacity-0" : "opacity-100"}`}>
         <Card>
           <CardHeader>
-            <CardTitle>Semester Lab Explorer</CardTitle>
-            <CardDescription>Select a semester and lab to explore the GitHub repository</CardDescription>
+            <CardTitle>SimplrKTULABS</CardTitle>
+            <CardDescription>A simple way to crack your labs.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
